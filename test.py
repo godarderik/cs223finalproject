@@ -4,6 +4,7 @@ from timeit import default_timer as timer
 from cPickle import *
 
 randoms = load( open( "save.p", "rb" ) )
+randLength = len(randoms)
 counter = 0
 
 '''
@@ -119,11 +120,10 @@ class Sort():
 
     #Implementation taken from 
     #
-    #Modified to use random pivot
     def bubbleSort(self,lst):
         comps = 0
-        for passnum in range(len(lst)-1,0,-1):
-            for i in range(passnum):
+        while (self.isSorted(lst) == False):
+            for i in range(len(lst)-1):
                 comps += 1
                 if lst[i]>lst[i+1]:
                     temp = lst[i]
@@ -256,11 +256,12 @@ class Sort():
             r = [1] * len(t)
             return {"r": r, "t": t}
 
-    def phase(self,phaseNum,lst,g,c,q):
+    def phase(self,phaseNum,lst,g,c,q,listLength):
         comps = 0
 
         global counter
         global randoms
+        global randLength
 
         #generate annealing schedules based on current phases
         
@@ -272,22 +273,24 @@ class Sort():
         #sort based on annealing schedules (independent of phase)
 
         #for each element in annealing schedule
-        for a in range(len(r)):
+        a = 0
+        while a < len(r):
             #iterate over each element in array to be sorted
-            for aboveKey in range(len(lst) - 1): 
+            aboveKey = 0
+            while aboveKey < listLength - 1: 
                 #do each trial r[a] times
-                for b in range(r[a]): 
-
-                    comps += 1 
-
+                b = 0
+                comps += r[a]
+                low = aboveKey+1
+                high = min(listLength,aboveKey + t[a])
+                while b < r[a]:
                     #first select a number above
-                    low = aboveKey+1
-                    high = min(len(lst),aboveKey + t[a])
+                    
                     if (low == high): 
                         s = low
                     else:
                         #s = low
-                        if counter == len(randoms):
+                        if counter == randLength:
                             counter = 0
 
                         s = int((high - low + 1)*randoms[counter] + low - 1)
@@ -295,23 +298,25 @@ class Sort():
                     
                     #if out of order, swap
                     if lst[aboveKey] > lst[s] and aboveKey < s:
-                        temp = lst[aboveKey]
-                        lst[aboveKey] = lst[s]
-                        lst[s] = temp
+                        lst[s], lst[aboveKey] = lst[aboveKey], lst[s]
+                    b+= 1
+                aboveKey += 1
             #iterate over each element in array to be sorted
-            for belowKey in range(len(lst) - 1):
+            belowKey = 0
+            while belowKey < listLength - 1:
                 #do each trial r[a] times 
-                for b in range(r[a]): 
-
-                    comps += 1
+                b = 0
+                comps += r[a]
+                high = belowKey
+                low = max(0,belowKey - t[a])
+                while b < r[a]:
 
                     #now select a number below
-                    high = belowKey
-                    low = max(0,belowKey - t[a])
+                    
                     if low == high:
                         s = low
                     else:
-                        if counter == len(randoms):
+                        if counter == randLength:
                             counter = 0
 
                         s = int((high - low + 1)*randoms[counter] + low - 1)
@@ -319,20 +324,25 @@ class Sort():
                         #print s, high, low
                     
 
-                    #if out of order, swap
+                 #if out of order, swap
                     if lst[belowKey] > lst[s] and belowKey < s:
-                        temp = lst[belowKey]
-                        lst[belowKey] = lst[s]
-                        lst[s] = temp
+                        lst[s], lst[belowKey] = lst[belowKey], lst[s]
+                    b += 1
+                belowKey += 1
+            a += 1
         return {"lst":lst, "comps":comps}
 
-    def annealingSort(self,lst,g,c,q):
+    def annealingSort(self,lst,g,c,q,listLength):
         comps = 0
-        p1 = self.phase(0,lst,g,c,q)
+        p1 = self.phase(0,lst,g,c,q,listLength)
         comps += p1["comps"]
-        p2 = self.phase(1,p1["lst"],g,c,q)
+        if self.isSorted(p1["lst"]):
+            return {"lst":p1["lst"], "comps":comps}
+        p2 = self.phase(1,p1["lst"],g,c,q,listLength)
         comps += p2["comps"]
-        p3 = self.phase(2,p2["lst"],g,c,q)
+        if self.isSorted(p2["lst"]):
+            return {"lst":p2["lst"], "comps":comps}
+        p3 = self.phase(2,p2["lst"],g,c,q,listLength)
         comps += p3["comps"]
         return {"lst":p3["lst"], "comps":comps}
 
@@ -423,20 +433,35 @@ class Tests():
 
     def testAnnealing(self):
         i = Inputs(1000000)
-        start = timer()
         toSort = i.randomPermutation()
-        res = self.s.quickSort(toSort)
-        print self.s.isSorted(res["lst"])
-        print res["comps"]
-        print timer() - start
-        start = timer()
-        res = self.s.annealingSort(toSort,5,2,5)
-        print timer() - start
+        #res = self.s.quickSort(toSort)
+        #print self.s.isSorted(res["lst"])
+        #print res["comps"]
+        #print timer() - start
+        #start = timer()
+        avgTime = 0
+        avgCorrect = 0
+        avgComps = 0
+        for y in range(1):
+            print y
+            toSort = i.randomPermutation()
+            listLength = len(toSort)
+            start = timer()
+            res = self.s.annealingSort(toSort,5,5,5, listLength)
+            end = timer()
+            avgTime += end - start
+            if self.s.isSorted(res["lst"]):
+                avgCorrect += 1
+            avgComps += res["comps"]
+
+
+        print avgCorrect/100.0, avgTime/100.0, avgComps/100.0
+        '''print timer() - start
         print self.s.isSorted(res["lst"]), res["comps"]
         start = timer()
         res = self.s.bubbleSort(toSort)
         print self.s.isSorted(res["lst"]), res["comps"]
-        print timer() - start
+        print timer() - start'''
 
        
 
@@ -480,7 +505,7 @@ class Tests():
                         res = self.s.bubbleSort(lst)
                     elif sortType == "standard":
                         start = timer()
-                        res = self.s.standardSort(lst)
+                        res = self.s.quickSort(lst)
                     elif sortType == "annealing":
                         start = timer()
                         res = self.s.annealingSort(lst,g,c,q)
@@ -524,6 +549,6 @@ c = 2
 q = 1
 t = Tests()
 t.testAnnealing()
-#print t.testFunction("spinthebottle",g,c,q)
+#print t.testFunction("standard",g,c,q)
 
 
