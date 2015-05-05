@@ -79,7 +79,7 @@ class Inputs():
             if random() < .5:
                 out.append(0)
             else: 
-                outl.append(1)
+                out.append(1)
         return out
 
 
@@ -132,17 +132,13 @@ class Sort():
             prev = x
         return True
 
-    #Implementation taken from 
-    #
     def bubbleSort(self,lst):
         comps = 0
         while (self.isSorted(lst) == False):
             for i in range(len(lst)-1):
                 comps += 1
                 if lst[i]>lst[i+1]:
-                    temp = lst[i]
-                    lst[i] = lst[i+1]
-                    lst[i+1] = temp
+                    lst[i], lst[i+1] = lst[i+1], lst[i]
         return {"lst":lst, "comps":comps}
 
     #Uses python's sorting algorithm known as TimSort
@@ -413,7 +409,7 @@ class Tests():
     def testAnnealing(self):
         i = Inputs(1000000)
         toSort = i.sorted()
-        types = ["reversed", "random", "within", "sorted","uniform", "zeroone"]
+        types = ["uniform"]
         
         
         for z in types:
@@ -434,7 +430,7 @@ class Tests():
                     toSort = i.randomPermutation()
                 elif z == "uniform":
                     toSort = i.uniform()
-                elif z == "uniform":
+                elif z == "zeroone":
                     toSort = i.zeroOne()
                 start = timer()
                 res = self.s.annealingSort(toSort, 0,2,0, listLength)
@@ -470,9 +466,8 @@ class Tests():
                     toSort = i.randomPermutation()
                 elif z == "uniform":
                     toSort = i.uniform()
-                elif z == "uniform":
+                elif z == "zeroone":
                     toSort = i.zeroOne()
-                    toSort = i.uniform()
                 start = timer()
                 res = self.s.quickSort(toSort)
                 end = timer()
@@ -517,7 +512,9 @@ class Tests():
         results = {"sorted":{"correct":[], "avgTime": [], "avgComps":[]},
         "reversed":{"correct":[], "avgTime": [], "avgComps":[]},
         "random":{"correct":[], "avgTime": [], "avgComps":[]},
-        "within":{"correct":[], "avgTime": [], "avgComps":[]} }
+        "within":{"correct":[], "avgTime": [], "avgComps":[]},
+        "uniform":{"correct":[], "avgTime": [], "avgComps":[]} ,
+        "zeroone":{"correct":[], "avgTime": [], "avgComps":[]}  }
 
         #trackers
         avgTime = 0
@@ -528,7 +525,7 @@ class Tests():
 
         #lengths to test
         lens = [10,50,100,500,1000,10000]
-        types = ["sorted", "reversed", "random", "within"]
+        types = ["sorted", "reversed", "random", "within", "uniform", "zeroone"]
 
         for y in types:
             for x in lens:
@@ -537,7 +534,7 @@ class Tests():
                 avgTime = 0
                 avgComps = 0
                 avgCorrect = 0
-                for x in range(trials):
+                for z in range(trials):
                     if y == "sorted":
                         lst = i.sorted()
                     elif y == "reversed":
@@ -546,6 +543,10 @@ class Tests():
                         lst = i.randomPermutation()
                     elif y == "within":
                         lst = i.within(int(ceil(x)))
+                    elif y == "uniform":
+                        lst = i.uniform()
+                    elif y == "zeroone":
+                        lst = i.zeroOne()
 
 
                     if sortType == "bubble":
@@ -593,33 +594,44 @@ class Tests():
                 avgCorrect += 1
             self.s.comps = 0
             avgTime += end - start
-        print avgCorrect/1.0/trials, avgTime/1.0/trials, avgComps/1.0/trials
+        return avgCorrect/1.0/trials, avgTime/1.0/trials, avgComps/1.0/trials
 
     def test(self):
+        #test all of the algorithms
+        #comment or uncomment as desired
+        g = 0
+        c = 2
+        q = 0
+
         print "Testing on Small Inputs"
         print "-----------------------"
         print "annealing"
-        print t.testFunction("annealing",g,c,q)
+        print self.testFunction("annealing",g,c,q)
         print "bubble"
-        print t.testFunction("bubble",g,c,q)
-        print "mergesort"
-        print t.testFunction("standard",g,c,q)
+        print self.testFunction("bubble",g,c,q)
+        print "quicksort"
+        print self.testFunction("standard",g,c,q)
         print "spinthebottle"
-        print t.testFunction("spinthebottle",g,c,q)
+        print self.testFunction("spinthebottle",g,c,q) # very slow
         print "Testing Correcness of Annealing Sort"
+        print "-----------------------"
+        print self.testCorrecness()
+        print "Testing Quick Sort on Large Inputs"
+        print "-----------------------"
+        self.testQuickSort()
+        print "Testing Bubble Sort on Large Inputs"
+        print "-----------------------"
+        self.testBubbleSort()
+        print "Testing Annealing Sort on Large Inputs"
+        self.testAnnealing()
 
-
-
-
-#constants
-g = 0
-c = 2
-q = 0
+i = Inputs(10)
+res =  i.zeroOne()
+print res
+s = Sort()
+print s.isSorted(res)
 t = Tests()
-t.testAnnealing()
-#t.testCorrecness()
-print "annealing"
-#print t.testFunction("annealing",g,c,q)
+t.test()
 
 
 
