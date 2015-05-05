@@ -65,6 +65,7 @@ Annealing Sort - Sorted
 1.0 3.78813307762 167999832.0
 
 Annealing Sort - Uniform
+1.0 6.22775731564 167999832.0
 
 Annealing Sort - Zero One
 1.0 6.00099039078 167999832.0
