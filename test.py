@@ -625,11 +625,7 @@ class Tests():
         print "Testing Annealing Sort on Large Inputs"
         self.testAnnealing()
 
-i = Inputs(10)
-res =  i.zeroOne()
-print res
-s = Sort()
-print s.isSorted(res)
+
 t = Tests()
 t.test()
 
